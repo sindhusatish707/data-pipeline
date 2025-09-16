@@ -27,16 +27,18 @@ This project serves as a portfolio-ready showcase of **data engineering skills**
 
 ## 📂 Project Structure
 
+```
 Data-Pipeline/
 ├─ airflow-docker/
 │ ├─ dags/ # DAGs (e.g., fetch_stock.py)
 │ ├─ logs/ # Task logs
 │ ├─ plugins/ # Custom operators/hooks (future)
-| ├─ docker-compose.yaml # Container orchestration
 │ └─ config/airflow.cfg # Airflow configuration
 ├─ data/ # Output data (mounted from container)
 ├─ requirements.txt # Python dependencies
+├─ docker-compose.yaml # Container orchestration
 └─ Dockerfile # Custom Airflow image
+```
 
 ---
 
