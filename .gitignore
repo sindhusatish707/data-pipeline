@@ -1,0 +1,43 @@
+# ---- Python ----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+*.egg-info/
+.env
+*.log
+
+# ---- Airflow ----
+# Airflow logs can be huge; don't push them to GitHub
+airflow-docker/logs/
+airflow-docker/logs/*
+
+# Airflow metadata database (if using SQLite locally)
+airflow.db
+
+# DAG run history (if using local executor with SQLite)
+unittests.cfg
+
+# ---- Docker ----
+# Docker-related build artifacts
+*.pid
+*.seed
+*.pid.lock
+
+# ---- Data Outputs ----
+# Exclude raw data outputs unless you specifically want to version them
+data/
+data/*
+
+# ---- IDE / Editor ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# ---- Virtual Environments ----
+.venv/
+env/
+venv/
+ENV/

@@ -1,0 +1,8 @@
+apache-airflow==3.0.6
+requests
+pandas
+yfinance
+psycopg2-binary
+# add providers you need e.g.:
+apache-airflow-providers-postgres
+apache-airflow-providers-apache-spark
