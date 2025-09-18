@@ -98,6 +98,6 @@ The diagram above shows how data flows from the source API to the final warehous
 
 ## 🗄️ Data Model
 
-![Stock Table Schema](docs/stock_table_schema.jpg)
+![Stock Table Schema](docs/schema.jpg)
 
 The schema defines consistent column names and data types for stock data.
