@@ -4,30 +4,36 @@ from datetime import datetime, timedelta
 import yfinance as yf
 import os
 
+# List of tickers to fetch
+TICKERS = ["AAPL", "MSFT", "TSLA"]
+
 default_args = {
-    "owner": "you",
+    "owner": "airflow",
     "depends_on_past": False,
     "retries": 1,
-    "retry_delay": timedelta(minutes=2),
+    "retry_delay": timedelta(minutes=1),
 }
 
-def fetch_symbol(symbol="AAPL", **kwargs):
-    df = yf.download(symbol, period="5d", interval="1d")
-    out_dir = "/opt/airflow/data"  # create a volume or use /opt/airflow/dags/data
+def fetch_symbols(tickers, **kwargs):
+    today = datetime.today().strftime("%Y-%m-%d")
+    out_dir = "/opt/airflow/data/raw"
     os.makedirs(out_dir, exist_ok=True)
-    df.to_csv(f"{out_dir}/{symbol}.csv")
-    print(f"Saved {symbol}.csv")
+    for symbol in tickers:
+        df = yf.download(symbol, period="5d", interval="1d")
+        path = f"{out_dir}/{symbol}_{today}.csv"
+        df.to_csv(path)
+        print(f"✅ Saved {symbol}.csv to {path}")
 
 with DAG(
-    dag_id="fetch_stock_example",
+    dag_id="fetch_multiple_stocks",
     default_args=default_args,
-    start_date=datetime(2024,1,1),
-    schedule="@daily",
+    start_date=datetime(2024, 1, 1),
+    schedule_interval="@daily",
     catchup=False,
-    tags=["example"],
+    tags=["data-extraction"],
 ) as dag:
-    t1 = PythonOperator(
-        task_id="fetch_AAPL",
-        python_callable=fetch_symbol,
-        op_kwargs={"symbol": "AAPL"},
+    PythonOperator(
+        task_id="fetch_stock_data",
+        python_callable=fetch_symbols,
+        op_kwargs={"tickers": TICKERS},
     )

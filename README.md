@@ -78,3 +78,26 @@ Data-Pipeline/
 4. **Check Output**
 
 - Look in ./data/AAPL.csv for results
+
+---
+
+## 📊 Project Architecture
+
+![Pipeline Architecture](docs/architecture.jpg)
+
+The diagram above shows how data flows from the source API to the final warehouse.
+
+### 🧠 How the Architecture Works
+
+1. **Extract:** The pipeline calls the Yahoo Finance API to pull raw stock price data.
+2. **Raw Zone:** The unprocessed data is saved as CSV files in `data/raw/`. This acts as a “data lake” where nothing is changed, so we always have the original source.
+3. **Transform:** A PySpark job will clean the data, remove duplicates, and calculate new fields (daily return, moving averages). Clean data is saved into `data/processed/`.
+4. **Load:** The processed data is written to a PostgreSQL table (or Parquet files in `data/warehouse/`) so analysts and dashboards can query it efficiently.
+5. **Orchestration:** Airflow schedules, monitors, and retries each step automatically.
+6. **Consumption:** Analysts, dashboards, or ML models can now use the clean data confidently.
+
+## 🗄️ Data Model
+
+![Stock Table Schema](docs/stock_table_schema.jpg)
+
+The schema defines consistent column names and data types for stock data.
