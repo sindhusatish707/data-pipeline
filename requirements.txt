@@ -3,6 +3,8 @@ requests
 pandas
 yfinance
 psycopg2-binary
+pyspark
+pyarrow
 # add providers you need e.g.:
 apache-airflow-providers-postgres
 apache-airflow-providers-apache-spark
