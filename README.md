@@ -16,12 +16,13 @@ This project serves as a portfolio-ready showcase of **data engineering skills**
 
 ## 🛠️ Tech Stack
 
-- **Apache Airflow (2.10.2)** – DAG scheduling & orchestration
-- **Docker & Docker Compose** – Containerized, reproducible setup
-- **PostgreSQL** – Airflow metadata database
-- **Celery + Redis** – Distributed task execution
-- **Pandas + yfinance** – Data extraction & transformation
-- **Python 3.10+** – DAG scripting & pipeline logic
+- **Apache Airflow (3.0.6)** – DAG scheduling & orchestration  
+- **Docker & Docker Compose** – Fully containerized setup  
+- **PostgreSQL + psycopg2 / SQLAlchemy** – Data storage  
+- **Celery + Redis** – Distributed task execution  
+- **PySpark** – Distributed data transformations (moving averages, returns)  
+- **Pandas** – Lightweight operations & data loading  
+- **Python 3.12** – Core programming language  
 
 ---
 
@@ -34,7 +35,11 @@ Data-Pipeline/
 │ ├─ logs/ # Task logs
 │ ├─ plugins/ # Custom operators/hooks (future)
 │ └─ config/airflow.cfg # Airflow configuration
-├─ data/ # Output data (mounted from container)
+├─ data/ 
+│ ├─ raw/ # Raw CSV files (one per symbol)
+│ └─ processes # Partitioned parquet files (per symbol, year, month)
+├─ scripts/ 
+│ └─ transform_spark.py # PySpark transformation logic
 ├─ requirements.txt # Python dependencies
 ├─ docker-compose.yaml # Container orchestration
 └─ Dockerfile # Custom Airflow image
@@ -44,21 +49,51 @@ Data-Pipeline/
 
 ## 🚀 Current Progress
 
-- ✅ **Set up Airflow with Docker** using CeleryExecutor
-- ✅ **Configured DAG folder, logs, and plugins**
-- ✅ **Created a sample DAG (`fetch_stock_example`)** that fetches AAPL stock prices from Yahoo Finance and stores them as CSV
-- ✅ **Mounted local `data/` folder** for easy inspection of output
-- ⏳ Next: Add data transformations and load step (Postgres/S3/Parquet)
+✅ **Infrastructure & Orchestration**  
+- Set up Airflow with CeleryExecutor in Docker Compose (Postgres + Redis)  
+- Added `airflow-init` step to automatically migrate DB & create admin user  
+- Configured DAGs folder, logs, and mounted data directories  
+
+✅ **Extraction (E)**  
+- Created `fetch_stock_dag.py` to fetch data for **multiple symbols** (AAPL, MSFT, TSLA)  
+- Saved raw CSVs into `data/raw/`  
+
+✅ **Transformation (T)**  
+- Built `transform_spark.py` (PySpark job) to:  
+  - Read multiple CSVs dynamically  
+  - Extract ticker from second row  
+  - Clean and normalize data (drop headers, cast data types)  
+  - Deduplicate by (symbol, date)  
+  - Calculate:
+    - **Prev Close**
+    - **Daily Return**
+    - **7-day & 14-day SMA**
+    - **7-day Volatility**
+  - Partition output by `symbol/year/month`
+  - Save as Parquet in `data/processed/`
+
+✅ **Loading (L)**  
+- Built `load_stock_dag.py` to:
+  - Create `trades` table if it doesn't exist  
+  - Load all parquet files into Postgres using SQLAlchemy + pandas  
+  - Normalize column names to lowercase for consistency  
+
+✅ **Debugging & Fixes**  
+- Fixed Java gateway issues by installing OpenJDK 17 in Dockerfile  
+- Resolved Airflow DB migration errors with proper init container  
+- Updated DAGs to fail gracefully when no raw files exist  
+- Aligned schema casing between Spark output and Postgres table  
 
 ---
 
 ## 🧭 Roadmap
 
-- [ ] Add support for multiple symbols (parameterized DAGs)
-- [ ] Transform data (add moving averages, daily returns)
-- [ ] Load data into Postgres or a data lake
-- [ ] Add Airflow sensors & alerts
-- [ ] Deploy pipeline to cloud (optional)
+- [ ] Add Airflow Variables to dynamically choose symbols  
+- [ ] Parameterize start/end dates for data fetch  
+- [ ] Implement automated unit tests for transformations  
+- [ ] Add monitoring & alerting (Slack, email)  
+- [ ] Optionally load data to S3/BigQuery/Snowflake  
+- [ ] Deploy pipeline to cloud (AWS ECS + RDS) 
 
 ---
 
@@ -73,11 +108,16 @@ Data-Pipeline/
 3. **Open Airflow UI**
 
 - Navigate to http://localhost:8080
-- Enable and trigger fetch_stock_example
+- Login with airflow / airflow
+- Enable and trigger fetch_stock_example, transform_spark_dag, load_stock_dag
 
 4. **Check Output**
 
 - Look in ./data/AAPL.csv for results
+- Verify results with
+  ```
+  docker compose exec postgres psql -U airflow -d airflow -c "SELECT * FROM trades LIMIT 10;"
+  ```
 
 ---
 
