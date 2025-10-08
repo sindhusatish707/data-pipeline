@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, text
 from airflow import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
+from slack_utils import slack_notify
 from datetime import datetime, timedelta
 import os, glob
 
@@ -62,10 +63,17 @@ with DAG(
 ) as dag:
 
     start = EmptyOperator(task_id="start")
+
     load_task = PythonOperator(
         task_id="load_to_postgres",
         python_callable=load_to_postgres
     )
+
+    slack_task = PythonOperator(
+        task_id="notify_slack",
+        python_callable=lambda: slack_notify("Loading completed ✅"),
+    )
+
     end = EmptyOperator(task_id="end")
 
-    start >> load_task >> end
+    start >> load_task >> slack_task >> end
